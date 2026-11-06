@@ -73,6 +73,10 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
         .show(ui, |ui| {
             // Right to left the navigation is on the right, away from the macOS traffic lights.
             let rtl = crate::rtl::on();
+            // Tom OS: the neon rule down the sidebar's inner edge.
+            let clip = ui.clip_rect();
+            let edge = if rtl { clip.min.x..=clip.min.x + 2.0 } else { clip.max.x - 2.0..=clip.max.x };
+            crate::theme::neon_rule_vertical(ui.painter(), Rect::from_x_y_ranges(edge, clip.y_range()));
             let back = if mac {
                 // macOS (#222): the Backstage covers the title bar, so its top band is the title
                 // bar: the back button sits beside the traffic lights, centred with them and as far
@@ -126,6 +130,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 let active = app.ui.backstage_page == id;
                 if active {
                     ui.painter().rect_filled(r, 0.0, egui::Color32::from_white_alpha(46));
+                    // Tom OS: a neon pink marker on the open page, like the focused workspace pill.
+                    let x = if rtl { r.max.x - 4.0..=r.max.x } else { r.min.x..=r.min.x + 4.0 };
+                    ui.painter().rect_filled(Rect::from_x_y_ranges(x, r.y_range().shrink(6.0)), 2.0, crate::theme::neon::PINK);
                 } else if on && resp.hovered() {
                     ui.painter().rect_filled(r, 0.0, egui::Color32::from_white_alpha(26));
                 }
@@ -171,6 +178,12 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                         }
                     }
                 }
+                // Tom OS: the brand tag above the links.
+                ui.add_space(10.0);
+                let (r, _) = ui.allocate_exact_size(vec2(200.0, 22.0), Sense::hover());
+                crate::theme::paint_bolt(ui.painter(), pos2(crate::rtl::lead_x(rtl, r, 22.0), r.center().y - 7.0), rtl, crate::theme::neon::YELLOW);
+                let ink = if t.dark { crate::theme::neon::PINK } else { egui::Color32::WHITE };
+                ui.painter().text(pos2(crate::rtl::lead_x(rtl, r, 38.0), r.center().y), crate::rtl::lead_center(rtl), "TOM OS", semibold(12.5), ink);
             });
         });
     egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.ribbon).inner_margin(egui::Margin::symmetric(40, 30))).show(ui, |ui| {

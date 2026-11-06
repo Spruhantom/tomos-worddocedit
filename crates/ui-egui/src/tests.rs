@@ -687,7 +687,7 @@ fn start_screen_shows_file_home_and_esc_leaves_no_document() {
     let a = h.state_mut();
     assert!(!a.ui.backstage, "Esc leaves the Start screen");
     assert!(!a.has_document(), "for an empty window, not a blank document");
-    assert_eq!(a.sent_title, "WordCraft", "the window is titled with the app alone");
+    assert_eq!(a.sent_title, crate::APP_NAME, "the window is titled with the app alone");
     // The ribbon's commands are off, but Help, the File tab and the settings work.
     for id in ["format.bold", "text.insert", "file.save", "file.saveAs", "file.print", "edit.paste", "insert.table", "ui.print"] {
         assert!(!widgets::enabled(a, id), "{id} is off with no document");
@@ -5515,11 +5515,11 @@ fn prefs_without_user_name_keep_default() {
 }
 
 /// #115: the old dark-mode switch migrates to Light/Dark; a saved System stays System, and the
-/// old key is never written back.
+/// old key is never written back. Tom OS WordDocEdit: nothing saved means the neon Dark theme.
 #[test]
 fn interface_theme_migrates_and_survives_a_restart() {
     use theme::Appearance;
-    for (saved, want) in [(r#"{"dark": false}"#, Appearance::Light), (r#"{"dark": true}"#, Appearance::Dark), ("{}", Appearance::System)] {
+    for (saved, want) in [(r#"{"dark": false}"#, Appearance::Light), (r#"{"dark": true}"#, Appearance::Dark), ("{}", Appearance::Dark)] {
         let mut a = app();
         a.apply_prefs(serde_json::from_str(saved).unwrap());
         assert_eq!(a.ui.theme, want, "{saved}");
@@ -5533,7 +5533,7 @@ fn interface_theme_migrates_and_survives_a_restart() {
     assert_eq!(b.ui.theme, Appearance::System);
     // An unknown saved value keeps the rest of the preferences.
     let odd: UiState = serde_json::from_str(r#"{"theme": "sepia", "tab": "Insert"}"#).unwrap();
-    assert_eq!((odd.theme, odd.tab.as_str()), (Appearance::System, "Insert"));
+    assert_eq!((odd.theme, odd.tab.as_str()), (Appearance::Dark, "Insert"));
 }
 
 /// #1861: the registered Interface Theme command drives the same setting as Options:

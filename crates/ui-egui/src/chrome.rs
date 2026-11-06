@@ -283,6 +283,30 @@ fn autosave_knob_x(rtl: bool, on: bool, r: Rect) -> f32 {
 
 /// Draws the title bar with window dragging, AutoSave, quick access, account, community and search
 /// controls, and the centred clickable document title.
+/// The Tom OS badge at the start of the title bar: a lightning bolt and "TOM OS" in a neon chip,
+/// like the brand chip on the Tom OS bar. Clicking it opens About.
+fn tomos_badge(app: &mut WordApp, ui: &mut Ui, t: &Tokens, rtl: bool) {
+    use crate::theme::neon;
+    let (r, resp) = ui.allocate_exact_size(vec2(78.0, 22.0), Sense::click());
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, crate::APP_NAME));
+    let fill = if resp.hovered() { t.hover } else if t.dark { neon::NIGHT } else { t.ribbon };
+    let edge = if t.dark { neon::PINK } else { t.accent };
+    ui.painter().rect(r, 11.0, fill, Stroke::new(1.0, edge.gamma_multiply(if resp.hovered() { 1.0 } else { 0.7 })), egui::StrokeKind::Inside);
+    // The bolt: two convex pieces, yellow in the dark theme, magenta ink in the light one.
+    let bolt = if t.dark { neon::YELLOW } else { t.accent_text };
+    crate::theme::paint_bolt(ui.painter(), pos2(crate::rtl::lead_x(rtl, r, 8.0), r.center().y - 7.0), rtl, bolt);
+    ui.painter().text(
+        pos2(crate::rtl::lead_x(rtl, r, 22.0), r.center().y),
+        crate::rtl::lead_center(rtl),
+        "TOM OS",
+        semibold(11.0),
+        if t.dark { neon::PINK } else { t.accent_text },
+    );
+    if resp.on_hover_text(crate::APP_NAME).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
+        app.dialog = crate::dialogs::Dialog::open("about", app);
+    }
+}
+
 pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     // macOS: shorter, so the system's traffic lights are centred in it; the tallest controls
@@ -296,6 +320,9 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
         .frame(egui::Frame::NONE.fill(t.title_bar).inner_margin(egui::Margin { left, right: 10, top: 0, bottom: 0 }))
         .show(ui, |ui| {
             let full = ui.max_rect();
+            // Tom OS: the neon rule (pink → purple → cyan) along the bottom of the title bar.
+            let width = ui.ctx().content_rect().x_range();
+            crate::theme::neon_rule(ui.painter(), Rect::from_x_y_ranges(width, (full.max.y - 2.0)..=full.max.y));
             // Drag the window by the title bar (integrated title bar on macOS).
             let drag = ui.interact(full, ui.scope_id().with("title_drag"), Sense::click_and_drag());
             if drag.drag_started() {
@@ -313,6 +340,13 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
             crate::rtl::root(ui, |ui| {
                 ui.horizontal_centered(|ui| {
                     ui.spacing_mut().item_spacing = vec2(2.0, 0.0);
+                    // macOS: keep the spot of the File page's back chevron (beside the traffic
+                    // lights) clear, so a click there in the editor doesn't open About (#2972).
+                    if app.integrated_titlebar && !rtl {
+                        ui.add_space(24.0);
+                    }
+                    tomos_badge(app, ui, &t, rtl);
+                    ui.add_space(10.0);
                     // AutoSave switch: greyed out, with the reason as its tooltip, when AutoSave can't
                     // cover the document (#196, #176); clicking it then offers Save As where that helps.
                     let block = app.autosave_block();
@@ -399,7 +433,7 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
             // Centred title.
             let title = if !app.has_document() {
                 // No document open (#1129): the app's name alone.
-                "WordCraft".to_string()
+                crate::APP_NAME.to_string()
             } else {
                 format!(
                     "{} — {}",
@@ -578,6 +612,10 @@ pub fn status_bar(app: &mut WordApp, ui: &mut Ui) {
                 .stroke(Stroke::new(1.0, t.border)),
         )
         .show(ui, |ui| {
+            // Tom OS: a hairline neon rule along the top of the status bar.
+            let top = ui.max_rect().min.y;
+            let width = ui.ctx().content_rect().x_range();
+            crate::theme::neon_rule(ui.painter(), Rect::from_x_y_ranges(width, top..=top + 1.0));
             // No document open (#1129): an empty status bar.
             if !app.has_document() {
                 return;

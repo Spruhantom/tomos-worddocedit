@@ -5,6 +5,9 @@
 //! the menus, ribbon, shortcuts, control channel and MCP all reach the same behaviour.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
+/// The app's display name: Tom OS WordDocEdit, the Tom OS edition of WordCraft.
+pub const APP_NAME: &str = "Tom OS WordDocEdit";
+
 /// WordCraft as craft-update knows it, with its 128 px icon and accent colour: the update
 /// prompt shows both, and an AppImage's menu entry gets the icon.
 #[cfg(not(target_arch = "wasm32"))]
@@ -470,7 +473,8 @@ impl Default for UiState {
             pane_places: Default::default(),
             pane_order: Vec::new(),
             nav_collapsed: Default::default(),
-            show_discord: true,
+            // Tom OS WordDocEdit: the title bar shows the Tom OS badge instead of the community button.
+            show_discord: false,
             author: None,
             window: None,
             language: i18n::AUTO.into(),

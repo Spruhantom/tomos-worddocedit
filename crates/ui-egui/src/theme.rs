@@ -4,9 +4,61 @@ use std::sync::Arc;
 
 use egui::{Align2, Color32, CornerRadius, FontData, FontDefinitions, FontFamily, FontId, Rect, Stroke, Visuals};
 
-/// WordCraft's app colour (and its darker ink for text on light backgrounds).
-pub const APP_COLOR: Color32 = Color32::from_rgb(0x3B, 0x5B, 0xDB);
-pub const APP_INK: Color32 = Color32::from_rgb(0x2B, 0x47, 0xB5);
+/// Tom OS WordDocEdit's app colour — Tom OS neon magenta, tuned for 4.5:1 white text on light
+/// surfaces — and its darker ink for text on light backgrounds.
+pub const APP_COLOR: Color32 = Color32::from_rgb(0xC2, 0x18, 0x6B);
+pub const APP_INK: Color32 = Color32::from_rgb(0x9E, 0x12, 0x58);
+
+/// The Tom OS neon palette (the same colours as the Tom OS desktop, Quickshell bar and TDM).
+pub mod neon {
+    use egui::Color32;
+    pub const PINK: Color32 = Color32::from_rgb(0xFF, 0x2D, 0x96);
+    pub const PURPLE: Color32 = Color32::from_rgb(0xC7, 0x4C, 0xFF);
+    pub const CYAN: Color32 = Color32::from_rgb(0x00, 0xF0, 0xFF);
+    pub const YELLOW: Color32 = Color32::from_rgb(0xFF, 0xE1, 0x4D);
+    pub const NIGHT: Color32 = Color32::from_rgb(0x0A, 0x0A, 0x12);
+}
+
+/// Paint the Tom OS neon rule (pink → purple → cyan) across `rect`, as on the Tom OS bar frame.
+pub fn neon_rule(painter: &egui::Painter, rect: Rect) {
+    let mut mesh = egui::Mesh::default();
+    let stops = [(0.0, neon::PINK), (0.5, neon::PURPLE), (1.0, neon::CYAN)];
+    for (i, (f, c)) in stops.iter().enumerate() {
+        let x = rect.min.x + rect.width() * f;
+        mesh.colored_vertex(egui::pos2(x, rect.min.y), *c);
+        mesh.colored_vertex(egui::pos2(x, rect.max.y), *c);
+        if i > 0 {
+            let b = (i as u32) * 2;
+            mesh.add_triangle(b - 2, b - 1, b);
+            mesh.add_triangle(b - 1, b, b + 1);
+        }
+    }
+    painter.add(egui::Shape::mesh(mesh));
+}
+
+/// The Tom OS lightning bolt, 10 × 14 pt from `origin` (its top-left; top-right right to left).
+pub fn paint_bolt(painter: &egui::Painter, origin: egui::Pos2, rtl: bool, color: Color32) {
+    let p = |x: f32, y: f32| egui::pos2(origin.x + if rtl { -x } else { x }, origin.y + y);
+    painter.add(egui::Shape::convex_polygon(vec![p(6.5, 0.0), p(1.0, 8.0), p(5.2, 8.0), p(9.0, 0.0)], color, Stroke::NONE));
+    painter.add(egui::Shape::convex_polygon(vec![p(4.4, 6.0), p(9.6, 6.0), p(3.0, 14.0)], color, Stroke::NONE));
+}
+
+/// The neon rule running top to bottom (pink at the top, cyan at the bottom), for side edges.
+pub fn neon_rule_vertical(painter: &egui::Painter, rect: Rect) {
+    let mut mesh = egui::Mesh::default();
+    let stops = [(0.0, neon::PINK), (0.5, neon::PURPLE), (1.0, neon::CYAN)];
+    for (i, (f, c)) in stops.iter().enumerate() {
+        let y = rect.min.y + rect.height() * f;
+        mesh.colored_vertex(egui::pos2(rect.min.x, y), *c);
+        mesh.colored_vertex(egui::pos2(rect.max.x, y), *c);
+        if i > 0 {
+            let b = (i as u32) * 2;
+            mesh.add_triangle(b - 2, b - 1, b);
+            mesh.add_triangle(b - 1, b, b + 1);
+        }
+    }
+    painter.add(egui::Shape::mesh(mesh));
+}
 
 /// The interface theme setting (File › Options › General, View › Interface Theme): a fixed light or
 /// dark palette, or `System`, which follows the OS light/dark appearance live (#115). Dark page
@@ -15,8 +67,9 @@ pub const APP_INK: Color32 = Color32::from_rgb(0x2B, 0x47, 0xB5);
 #[serde(from = "String", into = "String")]
 pub enum Appearance {
     Light,
-    Dark,
+    /// Tom OS WordDocEdit starts in the neon dark theme, matching the Tom OS desktop.
     #[default]
+    Dark,
     System,
 }
 
@@ -304,43 +357,43 @@ impl Tokens {
     pub fn light() -> Self {
         Tokens {
             dark: false,
-            title_bar: Color32::from_rgb(0xF0, 0xF0, 0xF0),
-            ribbon: Color32::from_rgb(0xF9, 0xF9, 0xF9),
-            tab_strip: Color32::from_rgb(0xF0, 0xF0, 0xF0),
-            canvas: Color32::from_rgb(0xE6, 0xE6, 0xE6),
-            panel: Color32::from_rgb(0xFA, 0xFA, 0xFA),
-            border: Color32::from_rgb(0xE1, 0xE1, 0xE1),
-            border_strong: Color32::from_rgb(0xC8, 0xC8, 0xC8),
-            text: Color32::from_rgb(0x24, 0x24, 0x24),
-            text_dim: Color32::from_rgb(0x61, 0x61, 0x61),
-            text_disabled: Color32::from_rgb(0xA8, 0xA8, 0xA8),
-            icon: Color32::from_rgb(0x42, 0x42, 0x42),
-            hover: Color32::from_rgb(0xE6, 0xE6, 0xE6),
-            pressed: Color32::from_rgb(0xD6, 0xD6, 0xD6),
-            checked: Color32::from_rgb(0xDD, 0xE3, 0xF8),
+            title_bar: Color32::from_rgb(0xF3, 0xEE, 0xF9),
+            ribbon: Color32::from_rgb(0xFB, 0xF8, 0xFE),
+            tab_strip: Color32::from_rgb(0xF3, 0xEE, 0xF9),
+            canvas: Color32::from_rgb(0xE7, 0xE1, 0xF0),
+            panel: Color32::from_rgb(0xFA, 0xF7, 0xFD),
+            border: Color32::from_rgb(0xE2, 0xD9, 0xEE),
+            border_strong: Color32::from_rgb(0xC9, 0xBC, 0xDB),
+            text: Color32::from_rgb(0x1C, 0x1A, 0x2B),
+            text_dim: Color32::from_rgb(0x57, 0x52, 0x6E),
+            text_disabled: Color32::from_rgb(0xA9, 0xA3, 0xBC),
+            icon: Color32::from_rgb(0x3A, 0x35, 0x52),
+            hover: Color32::from_rgb(0xEC, 0xE4, 0xF5),
+            pressed: Color32::from_rgb(0xDD, 0xD2, 0xEC),
+            checked: Color32::from_rgb(0xFC, 0xE3, 0xF0),
             accent: APP_COLOR,
             nav: APP_COLOR,
             accent_text: APP_INK,
             on_accent: Color32::WHITE,
             input: Color32::WHITE,
-            input_border: Color32::from_rgb(0x8A, 0x8A, 0x8A),
-            group_label: Color32::from_rgb(0x70, 0x70, 0x70),
+            input_border: Color32::from_rgb(0x85, 0x7C, 0xA0),
+            group_label: Color32::from_rgb(0x6B, 0x65, 0x85),
             ruler: Color32::from_rgb(0xFF, 0xFF, 0xFF),
-            ruler_margin: Color32::from_rgb(0xD4, 0xD4, 0xD4),
-            ruler_tick: Color32::from_rgb(0x70, 0x70, 0x70),
-            status_bar: Color32::from_rgb(0xF0, 0xF0, 0xF0),
-            selection: Color32::from_rgba_unmultiplied(0x3B, 0x5B, 0xDB, 0x48),
+            ruler_margin: Color32::from_rgb(0xDC, 0xD3, 0xE8),
+            ruler_tick: Color32::from_rgb(0x5E, 0x58, 0x78),
+            status_bar: Color32::from_rgb(0xF3, 0xEE, 0xF9),
+            selection: Color32::from_rgba_unmultiplied(0xC2, 0x18, 0x6B, 0x40),
             find_highlight: Color32::from_rgba_unmultiplied(0xFF, 0xE0, 0x3D, 0x90),
             page_shadow: Color32::from_rgba_unmultiplied(0, 0, 0, 0x22),
             handle: Color32::WHITE,
             handle_shadow: Color32::from_rgba_unmultiplied(0, 0, 0, 0x28),
-            guide: Color32::from_rgb(0xC0, 0x28, 0x8C),
-            equation_box: Color32::from_rgb(0x6E, 0x9B, 0xE6),
+            guide: Color32::from_rgb(0xC2, 0x18, 0x6B),
+            equation_box: Color32::from_rgb(0x7A, 0x5C, 0xE0),
             crop_handle: Color32::BLACK,
             crop_dim: Color32::from_rgba_unmultiplied(0x30, 0x30, 0x30, 0xE0),
             balloon: Color32::WHITE,
-            markup_area: Color32::from_rgb(0xF3, 0xF3, 0xF3),
-            markup_edge: Color32::from_rgb(0xE0, 0xE0, 0xE0),
+            markup_area: Color32::from_rgb(0xF5, 0xF0, 0xFA),
+            markup_edge: Color32::from_rgb(0xE0, 0xD6, 0xEC),
             resolved_text: Color32::from_rgb(0x1B, 0x6B, 0x42),
             author_colors: [
                 Color32::from_rgb(0x2F, 0x6F, 0xD0),
@@ -369,52 +422,52 @@ impl Tokens {
     pub fn dark() -> Self {
         Tokens {
             dark: true,
-            title_bar: Color32::from_rgb(0x1F, 0x1F, 0x1F),
-            ribbon: Color32::from_rgb(0x29, 0x29, 0x29),
-            tab_strip: Color32::from_rgb(0x1F, 0x1F, 0x1F),
-            canvas: Color32::from_rgb(0x14, 0x14, 0x14),
-            panel: Color32::from_rgb(0x26, 0x26, 0x26),
-            border: Color32::from_rgb(0x3A, 0x3A, 0x3A),
-            border_strong: Color32::from_rgb(0x55, 0x55, 0x55),
-            text: Color32::from_rgb(0xEE, 0xEE, 0xEE),
-            text_dim: Color32::from_rgb(0xC8, 0xC8, 0xC8),
-            text_disabled: Color32::from_rgb(0x6A, 0x6A, 0x6A),
-            icon: Color32::from_rgb(0xDD, 0xDD, 0xDD),
-            hover: Color32::from_rgb(0x3D, 0x3D, 0x3D),
-            pressed: Color32::from_rgb(0x4A, 0x4A, 0x4A),
-            checked: Color32::from_rgb(0x2E, 0x3A, 0x66),
-            accent: Color32::from_rgb(0x7A, 0x93, 0xF0),
-            nav: Color32::from_rgb(0x27, 0x31, 0x5C),
-            accent_text: Color32::from_rgb(0x9C, 0xB0, 0xF5),
-            // Dark text on the light dark-theme accent: white on #7a93f0 is only 2.9:1 (#655).
-            on_accent: Color32::from_rgb(0x11, 0x16, 0x2E),
-            input: Color32::from_rgb(0x1E, 0x1E, 0x1E),
-            input_border: Color32::from_rgb(0x7A, 0x7A, 0x7A),
-            group_label: Color32::from_rgb(0xA0, 0xA0, 0xA0),
+            title_bar: Color32::from_rgb(0x0B, 0x0A, 0x14),
+            ribbon: Color32::from_rgb(0x15, 0x13, 0x1F),
+            tab_strip: Color32::from_rgb(0x0B, 0x0A, 0x14),
+            canvas: Color32::from_rgb(0x0D, 0x0B, 0x16),
+            panel: Color32::from_rgb(0x18, 0x16, 0x26),
+            border: Color32::from_rgb(0x2E, 0x2B, 0x44),
+            border_strong: Color32::from_rgb(0x4A, 0x44, 0x68),
+            text: Color32::from_rgb(0xEC, 0xEA, 0xF7),
+            text_dim: Color32::from_rgb(0xB9, 0xB5, 0xD6),
+            text_disabled: Color32::from_rgb(0x61, 0x5C, 0x80),
+            icon: Color32::from_rgb(0xE4, 0xE0, 0xF7),
+            hover: Color32::from_rgb(0x26, 0x22, 0x38),
+            pressed: Color32::from_rgb(0x34, 0x2E, 0x4C),
+            checked: Color32::from_rgb(0x3B, 0x1A, 0x40),
+            accent: Color32::from_rgb(0xFF, 0x2D, 0x96),
+            nav: Color32::from_rgb(0x2A, 0x0E, 0x3D),
+            accent_text: Color32::from_rgb(0xFF, 0x6F, 0xB5),
+            // Night text on the Tom OS neon pink: white on #ff2d96 is under 4.5:1 (#655).
+            on_accent: Color32::from_rgb(0x0A, 0x0A, 0x12),
+            input: Color32::from_rgb(0x0F, 0x0E, 0x1A),
+            input_border: Color32::from_rgb(0x6E, 0x64, 0x96),
+            group_label: Color32::from_rgb(0xA4, 0x9F, 0xC4),
             // The text area is lighter than the margins, as in the light theme (#1148).
-            ruler: Color32::from_rgb(0x45, 0x45, 0x45),
-            ruler_margin: Color32::from_rgb(0x2E, 0x2E, 0x2E),
-            ruler_tick: Color32::from_rgb(0xB4, 0xB4, 0xB4),
-            status_bar: Color32::from_rgb(0x1F, 0x1F, 0x1F),
-            selection: Color32::from_rgba_unmultiplied(0x7A, 0x93, 0xF0, 0x55),
-            find_highlight: Color32::from_rgba_unmultiplied(0xC8, 0xA8, 0x00, 0x70),
+            ruler: Color32::from_rgb(0x3A, 0x35, 0x52),
+            ruler_margin: Color32::from_rgb(0x22, 0x1F, 0x33),
+            ruler_tick: Color32::from_rgb(0xE4, 0xE0, 0xF7),
+            status_bar: Color32::from_rgb(0x0B, 0x0A, 0x14),
+            selection: Color32::from_rgba_unmultiplied(0xFF, 0x2D, 0x96, 0x55),
+            find_highlight: Color32::from_rgba_unmultiplied(0xFF, 0xE1, 0x4D, 0x70),
             page_shadow: Color32::from_rgba_unmultiplied(0, 0, 0, 0x60),
             handle: Color32::from_rgb(0xF2, 0xF2, 0xF2),
             handle_shadow: Color32::from_rgba_unmultiplied(0, 0, 0, 0x5A),
-            guide: Color32::from_rgb(0xE0, 0x4C, 0xB0),
-            equation_box: Color32::from_rgb(0x6E, 0x9B, 0xE6),
+            guide: Color32::from_rgb(0xE0, 0x24, 0x8A),
+            equation_box: Color32::from_rgb(0x00, 0xB8, 0xD4),
             crop_handle: Color32::BLACK,
             crop_dim: Color32::from_rgba_unmultiplied(0x30, 0x30, 0x30, 0xE0),
-            balloon: Color32::from_rgb(0x2B, 0x2B, 0x2B),
-            markup_area: Color32::from_rgb(0x1B, 0x1B, 0x1B),
-            markup_edge: Color32::from_rgb(0x3A, 0x3A, 0x3A),
-            resolved_text: Color32::from_rgb(0x5B, 0xC0, 0x8A),
+            balloon: Color32::from_rgb(0x1E, 0x1B, 0x2E),
+            markup_area: Color32::from_rgb(0x12, 0x10, 0x1C),
+            markup_edge: Color32::from_rgb(0x2E, 0x2B, 0x44),
+            resolved_text: Color32::from_rgb(0x3D, 0xF5, 0xA0),
             author_colors: [
-                Color32::from_rgb(0x7F, 0xA8, 0xF2),
-                Color32::from_rgb(0xE5, 0x78, 0x6B),
-                Color32::from_rgb(0x6F, 0xBF, 0x73),
-                Color32::from_rgb(0xC0, 0x8F, 0xE0),
-                Color32::from_rgb(0xF0, 0xA0, 0x50),
+                Color32::from_rgb(0x00, 0xF0, 0xFF),
+                Color32::from_rgb(0xFF, 0x5F, 0xD2),
+                Color32::from_rgb(0xC7, 0x7D, 0xFF),
+                Color32::from_rgb(0xFF, 0xE1, 0x4D),
+                Color32::from_rgb(0x5A, 0xB8, 0xFF),
             ],
             leader_colors: [
                 Color32::from_rgb(0x2F, 0x6F, 0xD0),
@@ -423,14 +476,14 @@ impl Tokens {
                 Color32::from_rgb(0x8E, 0x44, 0xAD),
                 Color32::from_rgb(0xE0, 0x7B, 0x1F),
             ],
-            menu: Color32::from_rgb(0x2B, 0x2B, 0x2B),
-            blue: Color32::from_rgb(0x6C, 0x9B, 0xEA),
-            red: Color32::from_rgb(0xEE, 0x6A, 0x6A),
-            green: Color32::from_rgb(0x5B, 0xC0, 0x8A),
-            orange: Color32::from_rgb(0xF0, 0xA0, 0x50),
+            menu: Color32::from_rgb(0x1B, 0x18, 0x29),
+            blue: Color32::from_rgb(0x5A, 0xB8, 0xFF),
+            red: Color32::from_rgb(0xFF, 0x4D, 0x6D),
+            green: Color32::from_rgb(0x3D, 0xF5, 0xA0),
+            orange: Color32::from_rgb(0xFF, 0xA9, 0x4D),
             // A little lighter than the light theme's red, so it reads against the dark window.
-            close_hover: Color32::from_rgb(0xD6, 0x3C, 0x2C),
-            close_pressed: Color32::from_rgb(0xB3, 0x30, 0x23),
+            close_hover: Color32::from_rgb(0xC8, 0x17, 0x4F),
+            close_pressed: Color32::from_rgb(0xA3, 0x12, 0x3F),
             on_close: Color32::WHITE,
         }
     }
@@ -857,9 +910,10 @@ fn visuals(t: &Tokens) -> Visuals {
     v.window_fill = t.menu;
     v.extreme_bg_color = t.input;
     v.faint_bg_color = t.panel;
-    v.window_stroke = Stroke::new(1.0, t.border_strong);
-    v.window_corner_radius = CornerRadius::same(8);
-    v.menu_corner_radius = CornerRadius::same(6);
+    // Tom OS look: rounder corners, and a faint neon edge on windows and menus in the dark theme.
+    v.window_stroke = Stroke::new(1.0, if t.dark { t.accent.gamma_multiply(0.45) } else { t.border_strong });
+    v.window_corner_radius = CornerRadius::same(12);
+    v.menu_corner_radius = CornerRadius::same(10);
     v.selection.bg_fill = t.selection;
     v.selection.stroke = Stroke::new(1.0, t.accent);
     v.hyperlink_color = t.accent_text;
@@ -869,19 +923,25 @@ fn visuals(t: &Tokens) -> Visuals {
     v.widgets.inactive.weak_bg_fill = t.input;
     v.widgets.inactive.bg_stroke = Stroke::new(1.0, t.input_border);
     v.widgets.inactive.fg_stroke = Stroke::new(1.0, t.text);
-    v.widgets.inactive.corner_radius = CornerRadius::same(4);
+    v.widgets.inactive.corner_radius = CornerRadius::same(6);
     v.widgets.hovered.bg_fill = t.hover;
     v.widgets.hovered.weak_bg_fill = t.hover;
     v.widgets.hovered.bg_stroke = Stroke::new(1.0, t.border_strong);
     v.widgets.hovered.fg_stroke = Stroke::new(1.0, t.text);
-    v.widgets.hovered.corner_radius = CornerRadius::same(4);
+    v.widgets.hovered.corner_radius = CornerRadius::same(6);
     v.widgets.active.bg_fill = t.pressed;
     v.widgets.active.weak_bg_fill = t.pressed;
     v.widgets.active.fg_stroke = Stroke::new(1.0, t.text);
-    v.widgets.active.corner_radius = CornerRadius::same(4);
+    v.widgets.active.corner_radius = CornerRadius::same(6);
     v.widgets.open.bg_fill = t.pressed;
     v.widgets.open.weak_bg_fill = t.pressed;
-    v.popup_shadow = egui::Shadow { offset: [0, 4], blur: 16, spread: 0, color: Color32::from_black_alpha(if t.dark { 120 } else { 40 }) };
+    // In the dark theme menus and pop-ups glow neon pink, like the Tom OS power menu.
+    v.popup_shadow = egui::Shadow {
+        offset: [0, 4],
+        blur: 18,
+        spread: 0,
+        color: if t.dark { Color32::from_rgba_unmultiplied(0xFF, 0x2D, 0x96, 0x30) } else { Color32::from_black_alpha(40) },
+    };
     v.window_shadow = egui::Shadow { offset: [0, 8], blur: 28, spread: 0, color: Color32::from_black_alpha(if t.dark { 140 } else { 50 }) };
     v
 }

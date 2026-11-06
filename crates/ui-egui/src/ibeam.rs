@@ -171,6 +171,8 @@ mod tests {
         let text = vec!["A line of text to fill the pages."; 120].join("\n");
         let mut h = window_at(true, true, 1.0, 800.0, &text);
         h.state_mut().session.view.zoom = 0.5;
+        // Tom OS: the default interface is dark, so ask for the light one this test is about.
+        h.state_mut().run("view.interfaceTheme", serde_json::json!({"value": "light"})).unwrap();
         h.run_steps(3);
         let canvas = crate::theme::Tokens::get(&h.ctx).canvas;
         let off = crate::canvas::caret_contrast(wordcraft_doc::props::Rgb(canvas.r(), canvas.g(), canvas.b()));

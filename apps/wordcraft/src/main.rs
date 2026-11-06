@@ -505,7 +505,7 @@ fn main() -> eframe::Result {
     }
     let mut options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("WordCraft")
+            .with_title(wordcraft_ui_egui::APP_NAME)
             .with_app_id("ai.storyteller.wordcraft")
             .with_inner_size([1440.0, 920.0])
             .with_min_inner_size([760.0, 480.0])
@@ -564,7 +564,10 @@ fn main() -> eframe::Result {
             let mut session = Session::new(doc);
             session.system_region = region;
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
-            app.set_startup_update_check(true);
+            // Tom OS WordDocEdit: no startup check against upstream WordCraft releases — an update
+            // from there would replace this edition with stock WordCraft. Tom OS ships updates
+            // itself; Help › Check for Updates still works on request.
+            app.set_startup_update_check(false);
             load_prefs(&mut app);
             load_user_dictionary(&mut app);
             // Language packs from the suite's font store; an Install click is the person's own.

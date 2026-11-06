@@ -232,7 +232,10 @@ impl<'a> Exempt<'a> {
             || plain.starts_with('@') // contributor handles
             || plain.starts_with("Style") || plain.starts_with("Table Style ") // a new style's default name
             || plain.contains('┬') || plain.contains('\u{2061}') // equation input (UnicodeMath), drawn as math
-            || matches!(plain, "WordCraft" | "WordCraft User" | "Discord" | "https://" | "auto" | "I. II. III." | "i. ii. iii." | "I, II, III, …" | "i, ii, iii, …")
+            || matches!(plain, "WordCraft" | "Tom OS WordDocEdit" | "About Tom OS WordDocEdit" | "TOM OS" | "WordCraft User" | "Discord" | "https://" | "auto" | "I. II. III." | "i. ii. iii." | "I, II, III, …" | "i, ii, iii, …")
+            // Tom OS WordDocEdit's About lines: brand names and links, the same in every language.
+            || plain.starts_with("Tom OS")
+            || plain.starts_with("The neon punk word processor of Tom OS")
             || plain == "CONFIDENTIAL" // the watermark dialog's text: document content, kept as typed
             || plain == "Figure 1" // the caption dialog's sample: the label goes into the document as is
     }
