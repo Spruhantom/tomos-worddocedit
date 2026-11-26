@@ -12,15 +12,15 @@ version_schema: semver
 release: 1
 section: graphics
 priority: optional
-maintainer: ${WORDCRAFT_MAINTAINER}
-vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/wordcraft
+maintainer: Tom OS
+vendor: Tom OS
+homepage: https://github.com/Spruhantom/tomos-worddocedit
 license: MIT OR Apache-2.0
 description: |-
-  Open-source, native word processor that works the way Word users expect.
-  The ribbon, styles, tables, track changes, references and mail merge; reads
-  and writes .docx, opens .odt, .rtf, .html, .md and .txt, and exports PDF.
-  Includes wordcraft-cli, a headless converter and command runner.
+  Tom OS WordDocEdit is an open-source, native word processor for Tom OS and Linux.
+  It provides familiar document editing with ribbons, styles, tables, track changes,
+  references and mail merge; reads and writes .docx, opens .odt, .rtf, .html, .md
+  and .txt, and exports PDF. Includes wordcraft-cli, a headless converter and runner.
 
 # The binaries link only glibc and libgcc_s directly. Windowing (X11/Wayland, xkbcommon) and the
 # GPU (Vulkan, EGL/GL) are loaded at runtime, so they are dependencies/recommendations here
