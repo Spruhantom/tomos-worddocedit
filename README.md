@@ -80,6 +80,10 @@ package, build it with `cargo build --release -p wordcraft` and copy
 `packaging/linux/ai.storyteller.wordcraft.desktop` into
 `/usr/share/applications`.
 
+## ## Upstream integration status
+
+This repository is a branded downstream build. Upstream WordCraft changes are reviewed and integrated deliberately so Tom OS branding, application identity, packaging and user preferences are not overwritten by upstream defaults. The upstream baseline currently imported is `ef35d79cb81ea1067de0cf80e6e7cd7b1cf9489c`; the next integration is being prepared against the upstream `main` branch.
+
 ## Credits and licence
 
 Tom OS WordDocEdit is based on **WordCraft 0.15.1** by the ArtCraft team and

@@ -71,8 +71,7 @@ impl PrefsSync {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
-    use wordcraft_ui_egui::Services;
+    use wordcraft_ui_egui::{Services, theme::Appearance};
 
     fn app() -> WordApp {
         WordApp::new(wordcraft_engine::Session::new(wordcraft_engine::sample::sample_document()), Services::default())
@@ -88,7 +87,8 @@ mod tests {
         let stored = sync.changed(&a).unwrap();
         a.session.author = "rob".into();
         sync.keep_own_author("rob", "Grace Hopper");
-        a.run("ui.theme", json!({"value": "dark"})).unwrap();
+        // Dark is the Tom OS default; choose Light to make a real preference change.
+        a.ui.theme = Appearance::Light;
         let json = sync.changed(&a).expect("the theme changed");
         assert_ne!(json, stored);
         let mut next = app();
@@ -105,16 +105,19 @@ mod tests {
     #[test]
     fn dark_mode_survives_reload() {
         let mut first = app();
+        // Tom OS defaults to Dark, so start from Light to exercise the transition to Dark.
+        first.ui.theme = Appearance::Light;
         let mut sync = PrefsSync::new(None);
         let initial = sync.changed(&first);
         assert!(initial.is_some(), "first frame stores the preferences");
         assert_eq!(sync.changed(&first), None, "unchanged preferences are not rewritten");
-        first.run("ui.theme", json!({"value": "dark"})).unwrap();
+        first.ui.theme = Appearance::Dark;
         let stored = sync.changed(&first).expect("the theme change is stored");
 
         let mut reloaded = app();
+        reloaded.ui.theme = Appearance::Light;
         restore(&mut reloaded, Some(&stored));
-        assert_eq!(reloaded.ui.theme, wordcraft_ui_egui::theme::Appearance::Dark);
+        assert_eq!(reloaded.ui.theme, Appearance::Dark);
         assert_eq!(PrefsSync::new(Some(stored)).changed(&reloaded), None, "restoring doesn't write back");
     }
 
@@ -123,7 +126,8 @@ mod tests {
         for junk in [None, Some(""), Some("not json"), Some("[1,2]"), Some("{\"theme\":42}")] {
             let mut a = app();
             restore(&mut a, junk);
-            assert_eq!(a.ui.theme, wordcraft_ui_egui::theme::Appearance::System, "junk keeps the default appearance");
+            // The Tom OS edition defaults to Dark, not upstream WordCraft's System appearance.
+            assert_eq!(a.ui.theme, Appearance::Dark, "junk keeps the default appearance");
         }
     }
 }

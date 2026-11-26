@@ -289,7 +289,13 @@ fn tomos_badge(app: &mut WordApp, ui: &mut Ui, t: &Tokens, rtl: bool) {
     use crate::theme::neon;
     let (r, resp) = ui.allocate_exact_size(vec2(78.0, 22.0), Sense::click());
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, crate::APP_NAME));
-    let fill = if resp.hovered() { t.hover } else if t.dark { neon::NIGHT } else { t.ribbon };
+    let fill = if resp.hovered() {
+        t.hover
+    } else if t.dark {
+        neon::NIGHT
+    } else {
+        t.ribbon
+    };
     let edge = if t.dark { neon::PINK } else { t.accent };
     ui.painter().rect(r, 11.0, fill, Stroke::new(1.0, edge.gamma_multiply(if resp.hovered() { 1.0 } else { 0.7 })), egui::StrokeKind::Inside);
     // The bolt: two convex pieces, yellow in the dark theme, magenta ink in the light one.
