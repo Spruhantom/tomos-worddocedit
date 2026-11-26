@@ -82,6 +82,8 @@ mod tests {
     #[test]
     fn host_author_is_not_stored() {
         let mut a = app();
+        // Tom OS defaults to Dark, so start Light to exercise a real preference change.
+        a.ui.theme = Appearance::Light;
         a.session.author = "Grace Hopper".into();
         let mut sync = PrefsSync::new(None);
         let stored = sync.changed(&a).unwrap();
@@ -105,6 +107,8 @@ mod tests {
     #[test]
     fn dark_mode_survives_reload() {
         let mut first = app();
+        // Tom OS defaults to Dark; start Light so selecting Dark changes the stored value.
+        first.ui.theme = Appearance::Light;
         let mut sync = PrefsSync::new(None);
         let initial = sync.changed(&first);
         assert!(initial.is_some(), "first frame stores the preferences");
