@@ -9,6 +9,10 @@ on:
         description: "Version override for a test run, e.g. 0.2.0-rc.1 (empty: Cargo.toml)"
         type: string
         default: ""
+      dry-run:
+        description: "Build and validate release packages without signing or publishing a GitHub release"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -31,6 +35,7 @@ jobs:
       craft-fonts-ref: b076417b5880bd4154bd22f00695b1d28c6bea83
       web-craft-fonts: true
       version: ${{ inputs.version }}
+      dry-run: ${{ inputs.dry-run }}
     secrets:
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
