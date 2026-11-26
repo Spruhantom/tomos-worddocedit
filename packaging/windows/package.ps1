@@ -7,6 +7,7 @@
     wordcraft-<version>-windows-<arch>.msi            installer (WiX v5), one dual-scope package: for the
                                                       current user by default, no admin rights (#39);
                                                       "Everyone on this computer" installs per machine
+    wordcraft-<version>-windows-<arch>.exe            standalone GUI application executable
     wordcraft-<version>-windows-<arch>-portable.zip   wordcraft.exe + wordcraft-cli.exe
 
   The binaries link the C runtime statically (+crt-static), so neither the MSI nor the portable
@@ -94,6 +95,11 @@ New-Item -ItemType Directory -Force -Path $Stage | Out-Null
 Copy-Item (Join-Path $Bin 'wordcraft.exe'), (Join-Path $Bin 'wordcraft-cli.exe') $Stage
 
 & (Join-Path $PSScriptRoot 'sign.ps1') (Join-Path $Stage 'wordcraft.exe') (Join-Path $Stage 'wordcraft-cli.exe')
+
+# Publish the signed GUI executable as its own release asset as well as inside the portable ZIP.
+# Keep the architecture and version in the filename so x64 and ARM64 assets cannot collide.
+$StandaloneExe = Join-Path $Dist "wordcraft-$Version-windows-$Arch.exe"
+Copy-Item -LiteralPath (Join-Path $Stage 'wordcraft.exe') -Destination $StandaloneExe -Force
 
 # Required notices ship in every MSI, independently of optional craft-fonts.
 $AppNotices = Join-Path $Stage 'app-notices'
