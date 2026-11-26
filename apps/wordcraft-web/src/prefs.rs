@@ -88,7 +88,7 @@ mod tests {
         let stored = sync.changed(&a).unwrap();
         a.session.author = "rob".into();
         sync.keep_own_author("rob", "Grace Hopper");
-        a.run("ui.theme", json!({"value": "dark"})).unwrap();
+        a.execute("ui.theme", json!({"value": "dark"})).unwrap();
         let json = sync.changed(&a).expect("the theme changed");
         assert_ne!(json, stored);
         let mut next = app();
@@ -109,7 +109,7 @@ mod tests {
         let initial = sync.changed(&first);
         assert!(initial.is_some(), "first frame stores the preferences");
         assert_eq!(sync.changed(&first), None, "unchanged preferences are not rewritten");
-        first.run("ui.theme", json!({"value": "dark"})).unwrap();
+        first.execute("ui.theme", json!({"value": "dark"})).unwrap();
         let stored = sync.changed(&first).expect("the theme change is stored");
 
         let mut reloaded = app();
