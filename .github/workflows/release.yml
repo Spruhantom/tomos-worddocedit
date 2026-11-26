@@ -34,8 +34,10 @@ jobs:
       app-title: Tom OS WordDocEdit
       craft-fonts-ref: b076417b5880bd4154bd22f00695b1d28c6bea83
       web-craft-fonts: true
-      version: ${{ inputs.version }}
-      dry-run: ${{ inputs.dry-run }}
+      # workflow_dispatch provides these values; push events do not. Supply typed defaults
+      # so the reusable workflow receives a string and boolean for either trigger.
+      version: ${{ inputs.version || '' }}
+      dry-run: ${{ inputs.dry-run || false }}
       publish: true
     secrets:
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
