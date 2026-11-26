@@ -82,15 +82,13 @@ mod tests {
     #[test]
     fn host_author_is_not_stored() {
         let mut a = app();
-        // Tom OS defaults to Dark, so start Light to exercise a real preference change.
-        a.ui.theme = Appearance::Light;
         a.session.author = "Grace Hopper".into();
         let mut sync = PrefsSync::new(None);
         let stored = sync.changed(&a).unwrap();
         a.session.author = "rob".into();
         sync.keep_own_author("rob", "Grace Hopper");
-        // Exercise preference persistence directly: command dispatch is tested separately.
-        a.ui.theme = Appearance::Dark;
+        // Dark is the Tom OS default; choose Light to make a real preference change.
+        a.ui.theme = Appearance::Light;
         let json = sync.changed(&a).expect("the theme changed");
         assert_ne!(json, stored);
         let mut next = app();
@@ -107,7 +105,7 @@ mod tests {
     #[test]
     fn dark_mode_survives_reload() {
         let mut first = app();
-        // Tom OS defaults to Dark; start Light so selecting Dark changes the stored value.
+        // Tom OS defaults to Dark, so start from Light to exercise the transition to Dark.
         first.ui.theme = Appearance::Light;
         let mut sync = PrefsSync::new(None);
         let initial = sync.changed(&first);
@@ -117,6 +115,7 @@ mod tests {
         let stored = sync.changed(&first).expect("the theme change is stored");
 
         let mut reloaded = app();
+        reloaded.ui.theme = Appearance::Light;
         restore(&mut reloaded, Some(&stored));
         assert_eq!(reloaded.ui.theme, Appearance::Dark);
         assert_eq!(PrefsSync::new(Some(stored)).changed(&reloaded), None, "restoring doesn't write back");
@@ -127,7 +126,8 @@ mod tests {
         for junk in [None, Some(""), Some("not json"), Some("[1,2]"), Some("{\"theme\":42}")] {
             let mut a = app();
             restore(&mut a, junk);
-            assert_eq!(a.ui.theme, Appearance::System, "junk keeps the default appearance");
+            // The Tom OS edition defaults to Dark, not upstream WordCraft's System appearance.
+            assert_eq!(a.ui.theme, Appearance::Dark, "junk keeps the default appearance");
         }
     }
 }
