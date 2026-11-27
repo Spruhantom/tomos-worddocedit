@@ -67,13 +67,6 @@ on:
         type: string
         required: false
         default: "15.1-STABLE"
-      freebsd-architectures:
-        # aarch64 is cross-compiled in the x86_64 VM, so packaging/freebsd/package.sh must build
-        # with CARGO_BUILD_TARGET and name its archive after it, not after uname -m (#39).
-        description: 'JSON array of FreeBSD release architectures; packaging/freebsd/package.sh must honor CARGO_BUILD_TARGET for each listed architecture'
-        type: string
-        required: false
-        default: '["x86_64"]'
       has-server:
         description: "Whether to build and release the headless Linux server"
         type: boolean
@@ -91,7 +84,7 @@ on:
       dry-run:
         description: >-
           Build and check without releasing: no signing, no `release` environment, no Flatpak OCI push and no draft. For a nightly run on main
-          that finds release-only breakage (riscv64, Flatpak, FreeBSD, packaging) before release day.
+          that finds release-only breakage (Flatpak, FreeBSD, packaging) before release day.
         type: boolean
         required: false
         default: false
@@ -242,8 +235,6 @@ jobs:
     timeout-minutes: 90
     name: Windows ${{ matrix.arch }}
     needs: [version]
-    # arm64 builds natively on GitHub's Arm runner (free for public repositories). Cross-compiled
-    # on x64 it was the slowest job of the 11 Nov 2026 releases (30 to 39 minutes).
     runs-on: ${{ matrix.runner }}
     environment: ${{ !inputs.dry-run && github.ref == 'refs/heads/release' && 'release' || '' }}
     strategy:
@@ -474,7 +465,6 @@ jobs:
       matrix:
         include:
           - { arch: x86_64, runner: ubuntu-24.04 }
-          - { arch: aarch64, runner: ubuntu-24.04-arm }
     env:
       CARGO_TERM_COLOR: always
       CARGO_INCREMENTAL: 0
@@ -668,7 +658,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # aarch64 is in the default freebsd-architectures; callers can narrow it (#39).
         arch: [x86_64]
     env:
       APP_NAME: ${{ inputs.app-name }}
