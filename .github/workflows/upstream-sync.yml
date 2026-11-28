@@ -1,0 +1,112 @@
+name: WordCraft upstream sync
+
+on:
+  schedule:
+    # Weekly on Monday at 09:00 UTC.
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: wordcraft-upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Check and prepare upstream update
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out TomOS WordDocEdit
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch WordCraft upstream
+        id: upstream
+        shell: bash
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/storytold/wordcraft.git
+          git fetch --no-tags upstream main
+          upstream_sha="$(git rev-parse upstream/main)"
+          echo "sha=$upstream_sha" >> "$GITHUB_OUTPUT"
+          echo "Upstream WordCraft commit: $upstream_sha" >> "$GITHUB_STEP_SUMMARY"
+
+          if git merge-base --is-ancestor "$upstream_sha" HEAD; then
+            echo "has_updates=false" >> "$GITHUB_OUTPUT"
+            echo "No new upstream commits. TomOS WordDocEdit is already up to date." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "has_updates=true" >> "$GITHUB_OUTPUT"
+            echo "New upstream commits are available." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Merge upstream into an update branch
+        if: steps.upstream.outputs.has_updates == 'true'
+        id: merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="automation/wordcraft-upstream"
+          git switch -C "$branch" main
+
+          if ! git merge --no-edit "${{ steps.upstream.outputs.sha }}"; then
+            git merge --abort || true
+            {
+              echo "## Upstream sync needs attention"
+              echo
+              echo "WordCraft has new commits, but Git could not merge them cleanly into TomOS WordDocEdit."
+              echo "No changes were pushed and the main branch was left untouched."
+              echo "Resolve the conflict manually, preserving TomOS branding and platform exclusions, then rerun this workflow."
+              echo
+              echo "Upstream commit: ${{ steps.upstream.outputs.sha }}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          git push --force origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update upstream pull request
+        if: steps.upstream.outputs.has_updates == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_SHA: ${{ steps.upstream.outputs.sha }}
+          BRANCH: automation/wordcraft-upstream
+        shell: bash
+        run: |
+          set -euo pipefail
+          changes="$(git log --oneline --no-merges "HEAD..$UPSTREAM_SHA" 2>/dev/null || true)"
+          body="$(cat <<EOF
+          This pull request brings the latest changes from [storytold/wordcraft](https://github.com/storytold/wordcraft) into TomOS WordDocEdit.
+
+          - Upstream commit: `$UPSTREAM_SHA`
+          - Target: `main`
+          - The update is proposed for review; it is **not merged automatically**.
+          - CI and packaging checks will run on this pull request.
+          - Review branding, package identifiers, TomOS-specific changes and the supported-platform policy before merging.
+
+          Upstream changes are merged as a Git merge, so overlapping edits that cannot be reconciled safely stop the workflow rather than being overwritten.
+          EOF
+          )"
+
+          if gh pr view "$BRANCH" >/dev/null 2>&1; then
+            gh pr edit "$BRANCH" --title "chore: sync latest WordCraft upstream" --body "$body"
+            echo "Updated the existing upstream sync pull request." >> "$GITHUB_STEP_SUMMARY"
+          else
+            gh pr create --base main --head "$BRANCH" --title "chore: sync latest WordCraft upstream" --body "$body"
+            echo "Opened an upstream sync pull request." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Report no upstream changes
+        if: steps.upstream.outputs.has_updates == 'false'
+        run: echo "No upstream update is required this week." >> "$GITHUB_STEP_SUMMARY"
