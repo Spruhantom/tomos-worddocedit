@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Repackage a WordCraft Linux tarball as a single-file Flatpak bundle:
 #
-#   $DIST/wordcraft-<version>-linux-<arch>.flatpak
+#   $DIST/tomos-worddocedit-<version>-linux-<arch>.flatpak
 #
 # Usage: packaging/linux/flatpak-bundle.sh [--no-test] [TARBALL]
 #
@@ -38,14 +38,14 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-BASENAME="wordcraft-$VERSION-linux-$ARCH"
+BASENAME="tomos-worddocedit-$VERSION-linux-$ARCH"
 TARBALL="${TARBALL:-$DIST/$BASENAME.tar.gz}"
 [[ -f "$TARBALL" ]] || { echo "error: $TARBALL not found (run packaging/linux/package.sh --formats tar first)" >&2; exit 1; }
 for tool in flatpak flatpak-builder; do
   command -v "$tool" >/dev/null || { echo "error: $tool not found (apt install flatpak flatpak-builder librsvg2-common)" >&2; exit 1; }
 done
 
-echo "==> WordCraft $VERSION Flatpak bundle for $ARCH from $(basename "$TARBALL")"
+echo "==> Tom OS WordDocEdit $VERSION Flatpak bundle for $ARCH from $(basename "$TARBALL")"
 
 WORK="$CARGO_TARGET_DIR/flatpak-bundle"
 rm -rf "$WORK"
