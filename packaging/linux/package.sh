@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Build and package WordCraft for Linux (<arch> is x86_64 or aarch64, or riscv64 when cross-compiling):
 #
-#   $DIST/wordcraft-<version>-linux-<arch>.AppImage  any distro with glibc >= the build host's
-#   $DIST/wordcraft-<version>-linux-<arch>.AppImage.zsync  delta updates (needs zsyncmake)
-#   $DIST/wordcraft-<version>-linux-<arch>.deb       Debian, Ubuntu, Mint, Pop!_OS, ...
-#   $DIST/wordcraft-<version>-linux-<arch>.rpm       Fedora, openSUSE, RHEL, ...
-#   $DIST/wordcraft-<version>-linux-<arch>.tar.gz    plain FHS-style tree (bin/, share/)
+#   $DIST/tomos-worddocedit-<version>-linux-<arch>.AppImage  any distro with glibc >= the build host's
+#   $DIST/tomos-worddocedit-<version>-linux-<arch>.AppImage.zsync  delta updates (needs zsyncmake)
+#   $DIST/tomos-worddocedit-<version>-linux-<arch>.deb       Debian, Ubuntu, Mint, Pop!_OS, ...
+#   $DIST/tomos-worddocedit-<version>-linux-<arch>.rpm       Fedora, openSUSE, RHEL, ...
+#   $DIST/tomos-worddocedit-<version>-linux-<arch>.tar.gz    plain FHS-style tree (bin/, share/)
 #
 # Usage: packaging/linux/package.sh [--skip-build] [--formats "appimage deb rpm tar"]
 #
@@ -38,9 +38,9 @@ case "$ARCH" in
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
 export WORDCRAFT_MAINTAINER="${WORDCRAFT_MAINTAINER:-WordCraft maintainers <wordcraft@storyteller.ai>}"
-BASENAME="wordcraft-$VERSION-linux-$ARCH"
+BASENAME="tomos-worddocedit-$VERSION-linux-$ARCH"
 
-echo "==> WordCraft $VERSION for Linux $ARCH ($FORMATS)"
+echo "==> Tom OS WordDocEdit $VERSION for Linux $ARCH ($FORMATS)"
 
 if [[ "$SKIP_BUILD" = 0 ]]; then
   if [[ -n "${CROSS_TARGET:-}" ]]; then
@@ -129,7 +129,7 @@ if has appimage; then
     printf '%s  %s\n' "$expected_sha" "$target" | sha256sum -c -
     return 0
   }
-  APPDIR="$WORK/WordCraft.AppDir"
+  APPDIR="$WORK/TomOS-WordDocEdit.AppDir"
   cp -R "$STAGE" "$APPDIR"
   ln -s usr/bin/wordcraft "$APPDIR/AppRun"
   cp "$HERE/$APP_ID.desktop" "$APPDIR/$APP_ID.desktop"
@@ -162,7 +162,7 @@ if has appimage; then
   # each AppImage on GitHub Releases. `latest` is the newest published release that is not a
   # pre-release. A fork's builds point at its own releases through GITHUB_REPOSITORY.
   REPO="${GITHUB_REPOSITORY:-storytold/wordcraft}"
-  UPDATE_INFO="gh-releases-zsync|${REPO%%/*}|${REPO#*/}|latest|wordcraft-*-linux-$ARCH.AppImage.zsync"
+  UPDATE_INFO="gh-releases-zsync|${REPO%%/*}|${REPO#*/}|latest|tomos-worddocedit-*-linux-$ARCH.AppImage.zsync"
   # Extract-and-run: works without FUSE (containers, CI). The output embeds the pinned static
   # runtime, so users don't need libfuse2 either. With zsyncmake on the host (CI installs the zsync
   # package) appimagetool also writes the .zsync, into its working directory, hence the cd.
